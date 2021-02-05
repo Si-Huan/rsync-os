@@ -2,9 +2,6 @@ package storage
 
 import (
 	"bytes"
-	"github.com/golang/protobuf/proto"
-	"github.com/minio/minio-go/v6"
-	bolt "go.etcd.io/bbolt"
 	"io"
 	"log"
 	"path"
@@ -14,6 +11,10 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/minio/minio-go/v6"
+	bolt "go.etcd.io/bbolt"
 )
 
 /*
@@ -26,10 +27,10 @@ rsync-os also uses a strange file to represent a soft link
 type Minio struct {
 	client     *minio.Client
 	bucketName string
-	prefix string
+	prefix     string
 	/* Cache */
-	cache      *bolt.DB
-	tx *bolt.Tx
+	cache  *bolt.DB
+	tx     *bolt.Tx
 	bucket *bolt.Bucket
 }
 
@@ -102,11 +103,10 @@ func (m *Minio) Put(fileName string, content io.Reader, fileSize int64, metadata
 	}
 
 	written, err = m.client.PutObject(m.bucketName, fname, content, fsize, minio.PutObjectOptions{UserMetadata: data})
-
 	value, err := proto.Marshal(&cache.FInfo{
 		Size:  fileSize,
 		Mtime: metadata.Mtime,
-		Mode:  int32(metadata.Mode),	// FIXME: convert uint32 to int32
+		Mode:  int32(metadata.Mode), // FIXME: convert uint32 to int32
 	})
 	if err != nil {
 		return -1, err
@@ -134,7 +134,7 @@ func (m *Minio) Delete(fileName string, mode rsync.FileMode) (err error) {
 
 // EXPERIMENTAL
 func (m *Minio) List() (rsync.FileList, error) {
-	filelist := make(rsync.FileList, 0, 1 << 16)
+	filelist := make(rsync.FileList, 0, 1<<16)
 
 	// We don't list all files directly
 
@@ -155,7 +155,7 @@ func (m *Minio) List() (rsync.FileList, error) {
 			return filelist, err
 		}
 		filelist = append(filelist, rsync.FileInfo{
-			Path:  p,		// ignore prefix
+			Path:  p, // ignore prefix
 			Size:  info.Size,
 			Mtime: info.Mtime,
 			Mode:  rsync.FileMode(info.Mode),
@@ -165,7 +165,7 @@ func (m *Minio) List() (rsync.FileList, error) {
 
 	// Add current dir as .
 	if !hasdot {
-		workdir := []byte(filepath.Clean(m.prefix))		// If a empty string, we get "."
+		workdir := []byte(filepath.Clean(m.prefix)) // If a empty string, we get "."
 		v := m.bucket.Get(workdir)
 		if v == nil {
 			return filelist, nil
@@ -187,7 +187,7 @@ func (m *Minio) List() (rsync.FileList, error) {
 }
 
 func (m *Minio) ListObj() (rsync.FileList, error) {
-	filelist := make(rsync.FileList, 0, 1 << 16)
+	filelist := make(rsync.FileList, 0, 1<<16)
 
 	// Create a done channel to control 'ListObjects' go routine.
 	doneCh := make(chan struct{})

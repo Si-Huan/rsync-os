@@ -15,6 +15,10 @@
 # vendor/
 
 .idea/
+.vscode/
 
 # boltdb
 *.db
+
+build/
+rclone/

@@ -7,3 +7,8 @@ title = "configuration of rsync-os"
   keySecret = "minioadmin"
   [minio.boltdb]
     path = "test.db"
+
+[onedrive]
+  path = "onedrive:repo"
+  [onedrive.boltdb]
+    path = "onedrive.db"

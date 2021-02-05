@@ -11,11 +11,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/spf13/viper"
 	"log"
 	"rsync-os/rsync"
 	"rsync-os/storage"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 func ClientS3(src string, dest string) {
@@ -39,7 +40,6 @@ func ClientS3(src string, dest string) {
 	dbconf := viper.GetStringMapString(dest + ".boltdb")
 	minioConf := viper.GetStringMapString(dest)
 
-
 	stor, _ := storage.NewMinio(module, ppath, dbconf["path"], minioConf["endpoint"], minioConf["keyaccess"], minioConf["keysecret"], false)
 	defer stor.Close()
 
@@ -53,6 +53,59 @@ func ClientS3(src string, dest string) {
 
 }
 
+func ClientRclone(src, dest string) {
+	addr, module, path, err := rsync.SplitURI(src)
+
+	if err != nil {
+		log.Println("Invaild URI")
+		return
+	}
+
+	log.Println(module, path)
+
+	ppath := rsync.TrimPrepath(path)
+	fmt.Println(ppath)
+
+	if viper.GetStringMapString(dest) == nil {
+		log.Println("Lack of ", dest)
+		return
+	}
+
+	// Config
+	dbconf := viper.GetStringMapString(dest + ".boltdb")
+	rcloneConf := viper.GetStringMapString(dest)
+	fmt.Println(rcloneConf)
+
+	// 打死硬编码
+	rtor, _ := storage.NewRclone(rcloneConf["path"], "archlinuxcn/"+ppath, module, dbconf["path"])
+	// rtor, _ := storage.NewRclone(rcloneConf["path"], "archlinux/"+ppath, module, dbconf["path"])
+	defer rtor.Close()
+
+	client, err := rsync.SocketClient(rtor, addr, module, ppath, nil)
+	if err != nil {
+		fmt.Println("SUPERERR    ", err)
+		// panic("rsync client fails to initialize")
+	}
+	if err = client.Sync(); err != nil {
+		fmt.Println("SUPERERR    ", err)
+		// panic(err)
+	}
+
+	for err != nil {
+		client, err = rsync.SocketClient(rtor, addr, module, ppath, nil)
+		if err != nil {
+			fmt.Println("SUPERERR    ", err)
+			// panic("rsync client fails to initialize")
+		}
+		if err = client.Sync(); err != nil {
+			fmt.Println("SUPERERR    ", err)
+			// panic(err)
+		}
+	}
+	fmt.Println("SUPERSUCCESS")
+
+}
+
 func main() {
 	loadConfigIfExists()
 	flag.Parse()
@@ -62,6 +115,7 @@ func main() {
 		return
 	}
 	startTime := time.Now()
-	ClientS3(args[0], args[1])
+	// ClientS3(args[0], args[1])
+	ClientRclone(args[0], args[1])
 	log.Println("Duration:", time.Since(startTime))
 }

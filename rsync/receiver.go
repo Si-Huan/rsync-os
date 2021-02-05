@@ -5,11 +5,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/kaiakz/ubuffer"
 	"io"
 	"log"
 	"sort"
 	"time"
+
+	"github.com/kaiakz/ubuffer"
 )
 
 /* Receiver:
@@ -43,7 +44,7 @@ func (r *Receiver) SendExclusions() error {
 
 // Return a filelist from remote
 func (r *Receiver) RecvFileList() (FileList, map[int][]byte, error) {
-	filelist := make(FileList, 0, 1 *M)
+	filelist := make(FileList, 0, 1*M)
 	symlinks := make(map[int][]byte)
 	for {
 		flags, err := r.conn.ReadByte()
@@ -103,7 +104,7 @@ func (r *Receiver) RecvFileList() (FileList, map[int][]byte, error) {
 			return filelist, symlinks, err
 		}
 
-		path := make([]byte, 0, partial + pathlen)
+		path := make([]byte, 0, partial+pathlen)
 		/* If so, use last */
 		if (flags & FLIST_NAME_SAME) != 0 { // FLIST_NAME_SAME
 			last := filelist[lastIndex]
@@ -158,7 +159,8 @@ func (r *Receiver) RecvFileList() (FileList, map[int][]byte, error) {
 			//fmt.Println("Symbolic Len:", len, "Content:", slink)
 		}
 
-		fmt.Println("@", string(path), mode, size, mtime)
+		//SiHuan
+		// fmt.Println("@", string(path), mode, size, mtime)
 
 		filelist = append(filelist, FileInfo{
 			Path:  path,
@@ -204,7 +206,7 @@ func (r *Receiver) Generator(remoteList FileList, downloadList []int, symlinks m
 
 			if _, err := r.storage.Put(string(remoteList[v].Path), content, size, FileMetadata{
 				Mtime: remoteList[v].Mtime,
-				Mode: remoteList[v].Mode,
+				Mode:  remoteList[v].Mode,
 			}); err != nil {
 				return err
 			}
@@ -365,7 +367,7 @@ func (r *Receiver) FinalPhase() error {
 
 func (r *Receiver) Sync() error {
 	defer func() {
-		log.Println("Task completed", r.conn.Close())	// TODO: How to handle errors from Close
+		log.Println("Task completed", r.conn.Close()) // TODO: How to handle errors from Close
 	}()
 
 	lfiles, err := r.storage.List()
@@ -392,17 +394,19 @@ func (r *Receiver) Sync() error {
 	if len(newfiles) == 0 && len(oldfiles) == 0 {
 		log.Println("There is nothing to do")
 	}
-	fmt.Print(newfiles, oldfiles)
+	// fmt.Println(newfiles, oldfiles)
+	fmt.Println("New File: ", len(newfiles), "Delete File: ", len(oldfiles))
+
+	if err := r.FileCleaner(lfiles[:], oldfiles[:]); err != nil {
+		return err
+	}
 
 	if err := r.Generator(rfiles[:], newfiles[:], symlinks); err != nil {
 		return err
 	}
-	if err := r.FileCleaner(lfiles[:], oldfiles[:]); err != nil {
-		return err
-	}
+
 	if err := r.FinalPhase(); err != nil {
 		return err
 	}
 	return nil
 }
-
