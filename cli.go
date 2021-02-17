@@ -1,7 +1,7 @@
 package main
 
 type Cli struct {
-	Src string
+	Src  string
 	Dest string
 	// Flags -aDglnoprtvx
 }
@@ -16,11 +16,11 @@ Usage: rsync [OPTION]... SRC [SRC]... DEST
   or   rsync [OPTION]... rsync://[USER@]HOST[:PORT]/SRC [DEST]
 */
 //func ParseArgs() *Cli {
-	//cli := &Cli{}
+//cli := &Cli{}
 
-	//syncCommand := flag.NewFlagSet("sync", flag.ExitOnError)
-	//recoverCommand := flag.NewFlagSet("recover", flag.ExitOnError)
-	//lsCommand := flag.NewFlagSet("ls", flag.ExitOnError)
-	//testCommand := flag.NewFlagSet("test", flag.ExitOnError)
+//syncCommand := flag.NewFlagSet("sync", flag.ExitOnError)
+//recoverCommand := flag.NewFlagSet("recover", flag.ExitOnError)
+//lsCommand := flag.NewFlagSet("ls", flag.ExitOnError)
+//testCommand := flag.NewFlagSet("test", flag.ExitOnError)
 
 //}

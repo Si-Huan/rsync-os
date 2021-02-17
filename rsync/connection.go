@@ -14,8 +14,8 @@ type SendReceiver interface {
 // This struct has two main attributes, both of them can be used for a plain socket or an SSH
 type Conn struct {
 	writer    io.WriteCloser // Write only
-	reader    io.ReadCloser // Read only
-	bytespool []byte // Anti memory-wasted, default size: 8 bytes
+	reader    io.ReadCloser  // Read only
+	bytespool []byte         // Anti memory-wasted, default size: 8 bytes
 }
 
 func (conn *Conn) Write(p []byte) (n int, err error) {
@@ -65,7 +65,7 @@ func (conn *Conn) ReadLong() (int64, error) {
 }
 
 func (conn *Conn) ReadVarint() (int64, error) {
-	sval, err := conn.ReadInt();
+	sval, err := conn.ReadInt()
 	if err != nil {
 		return 0, err
 	}
@@ -75,19 +75,19 @@ func (conn *Conn) ReadVarint() (int64, error) {
 	return conn.ReadLong()
 }
 
-func  (conn *Conn) WriteByte(data byte) error {
+func (conn *Conn) WriteByte(data byte) error {
 	return binary.Write(conn.writer, binary.LittleEndian, data)
 }
 
-func  (conn *Conn) WriteShort(data int16) error {
+func (conn *Conn) WriteShort(data int16) error {
 	return binary.Write(conn.writer, binary.LittleEndian, data)
 }
 
-func  (conn *Conn) WriteInt(data int32) error {
+func (conn *Conn) WriteInt(data int32) error {
 	return binary.Write(conn.writer, binary.LittleEndian, data)
 }
 
-func  (conn *Conn) WriteLong(data int64) error {
+func (conn *Conn) WriteLong(data int64) error {
 	return binary.Write(conn.writer, binary.LittleEndian, data)
 }
 

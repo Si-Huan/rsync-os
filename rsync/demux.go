@@ -44,7 +44,7 @@ func (r *MuxReader) Read(p []byte) (n int, err error) {
 		}
 	}
 	rlen := uint32(len(p))
-	if rlen > r.remain {	// Min(len(p), remain)
+	if rlen > r.remain { // Min(len(p), remain)
 		rlen = r.remain
 	}
 	n, err = r.in.Read(p[:rlen])
@@ -80,4 +80,3 @@ func (r *MuxReader) readHeader() error {
 func (r *MuxReader) Close() error {
 	return r.in.Close()
 }
-

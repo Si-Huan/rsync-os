@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"log"
+
+	"github.com/spf13/viper"
 )
 
 // Create a default config file if not found config.toml
@@ -30,7 +31,7 @@ func loadConfigIfExists() {
 
 func createSampleConfig() {
 	confSample := []byte(
-`title = "configuration of rsync-os"
+		`title = "configuration of rsync-os"
 
 # [object storage's name] 
 [minio]

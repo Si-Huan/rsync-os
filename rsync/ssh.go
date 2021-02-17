@@ -5,7 +5,7 @@ import (
 )
 
 type SSH struct {
-	client *ssh.Client
+	client  *ssh.Client
 	session *ssh.Session
 }
 
@@ -37,13 +37,11 @@ func NewSSH(address string, username string, pwd string, cmd string) (*SSH, erro
 
 	// Handshake over SSH
 
-
 	return &SSH{
-		client:   client,
-		session:  session,
+		client:  client,
+		session: session,
 	}, nil
 }
-
 
 func (s *SSH) Write(p []byte) (n int, err error) {
 	return s.session.Stdout.Write(p)
@@ -56,4 +54,3 @@ func (s *SSH) Read(p []byte) (n int, err error) {
 func (s *SSH) Close() error {
 	return s.client.Close()
 }
-

@@ -30,14 +30,14 @@ type MuxReaderV0 struct {
 func NewMuxReaderV0(reader io.ReadCloser) *MuxReaderV0 {
 	mr := &MuxReaderV0{
 		in:      reader,
-		Data:    make(chan byte, 16 * M),
+		Data:    make(chan byte, 16*M),
 		closeCh: make(chan byte),
 	}
 	// Demux in Goroutine
 	go func() {
 
-		header := make([]byte, 4)	// Header size: 4 bytes
-		var dsize uint32 = 1 << 16	// Default size: 65536
+		header := make([]byte, 4)  // Header size: 4 bytes
+		var dsize uint32 = 1 << 16 // Default size: 65536
 		bytespool := make([]byte, dsize)
 
 		for {
@@ -92,12 +92,12 @@ func NewMuxReaderV0(reader io.ReadCloser) *MuxReaderV0 {
 // FIXME: Never return error
 func (r *MuxReaderV0) Read(p []byte) (n int, err error) {
 	for i, _ := range p {
-		p[i] = <- r.Data
+		p[i] = <-r.Data
 	}
 	return len(p), nil
 }
 
 func (r *MuxReaderV0) Close() error {
-	r.closeCh <- 0	// close the channel Data & exit the demux goroutine
+	r.closeCh <- 0 // close the channel Data & exit the demux goroutine
 	return r.in.Close()
 }

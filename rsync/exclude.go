@@ -9,19 +9,19 @@ import (
 // --exclude & --exclude-from
 
 /* These default ignored items come from the CVS manual.
- * "RCS SCCS CVS CVS.adm RCSLOG cvslog.* tags TAGS"
- * " .make.state .nse_depinfo *~ #* .#* ,* _$* *$"
- * " *.old *.bak *.BAK *.orig *.rej .del-*"
- * " *.a *.olb *.o *.obj *.so *.exe"
- * " *.Z *.elc *.ln core"
- The rest we added to suit ourself.
- * " .svn/ .bzr/"
- */
+* "RCS SCCS CVS CVS.adm RCSLOG cvslog.* tags TAGS"
+* " .make.state .nse_depinfo *~ #* .#* ,* _$* *$"
+* " *.old *.bak *.BAK *.orig *.rej .del-*"
+* " *.a *.olb *.o *.obj *.so *.exe"
+* " *.Z *.elc *.ln core"
+The rest we added to suit ourself.
+* " .svn/ .bzr/"
+*/
 
 // Filter List
 type Exclusion struct {
 	patterns []string
-	root string
+	root     string
 }
 
 func (e *Exclusion) Match(name string) (matched bool, err error) {
@@ -30,7 +30,9 @@ func (e *Exclusion) Match(name string) (matched bool, err error) {
 		if strings.HasPrefix(name, p) && name[len(p)] == '/' {
 			return true, nil
 		}
-		if matched, err = filepath.Match(p, name); matched || err != nil {break}
+		if matched, err = filepath.Match(p, name); matched || err != nil {
+			break
+		}
 	}
 	return
 }
@@ -43,7 +45,6 @@ func (e *Exclusion) Add(pattern string) {
 // This is only called by the client
 func (e *Exclusion) SendExlusion(conn Conn) error {
 	// If list_only && !recurse, add '/*/*'
-
 
 	// For each item, send its length first
 	for _, p := range e.patterns {
@@ -62,4 +63,3 @@ func (e *Exclusion) SendExlusion(conn Conn) error {
 	}
 	return nil
 }
-

@@ -22,9 +22,8 @@ func (s *Sender) SendFileList() error {
 
 	// Send list to receiver
 	var last *FileInfo = nil
-	for _, f := range list{
+	for _, f := range list {
 		var flags byte = 0
-
 
 		if bytes.Equal(f.Path, []byte(".")) {
 			if f.Mode.IsDIR() {
@@ -57,14 +56,14 @@ func (s *Sender) SendFileList() error {
 		}
 
 		rPathCount := int32(len(f.Path) - lPathCount)
-		if  rPathCount > 255 {
+		if rPathCount > 255 {
 			flags |= FLIST_NAME_LONG
 		}
 
 		/* we must make sure we don't send a zero flags byte or the other
 		   end will terminate the flist transfer */
 		if flags == 0 && !f.Mode.IsDIR() {
-			flags |= 1<<0
+			flags |= 1 << 0
 		}
 		if flags == 0 {
 			flags |= FLIST_NAME_LONG
@@ -75,13 +74,13 @@ func (s *Sender) SendFileList() error {
 		}
 
 		/* Send len of path, and bytes of path */
-		if flags& FLIST_NAME_SAME != 0 {
+		if flags&FLIST_NAME_SAME != 0 {
 			if err = s.conn.WriteByte(flags); err != nil {
 				return err
 			}
 		}
 
-		if flags& FLIST_NAME_LONG != 0 {
+		if flags&FLIST_NAME_LONG != 0 {
 			if err = s.conn.WriteInt(rPathCount); err != nil {
 				return err
 			}
@@ -101,12 +100,12 @@ func (s *Sender) SendFileList() error {
 		}
 
 		/* Send Mtime, GID, UID, RDEV if needed */
-		if flags& FLIST_TIME_SAME == 0 {
+		if flags&FLIST_TIME_SAME == 0 {
 			if err = s.conn.WriteInt(f.Mtime); err != nil {
 				return err
 			}
 		}
-		if flags& FLIST_MODE_SAME == 0 {
+		if flags&FLIST_MODE_SAME == 0 {
 			if err = s.conn.WriteInt(int32(f.Mode)); err != nil {
 				return err
 			}
@@ -157,10 +156,9 @@ func (s *Sender) Generator(fileList FileList) error {
 		sums := make([]SumChunk, 0, count)
 
 		var (
-			i int32 = 0
+			i      int32 = 0
 			offset int64 = 0
 		)
-
 
 		for ; i < count; i++ {
 			sum1, err := s.conn.ReadInt() // sum1:
@@ -179,12 +177,12 @@ func (s *Sender) Generator(fileList FileList) error {
 			chunk.fileOffset = offset
 
 			if i == count-1 && remainder != 0 {
-				chunk.chunkLen = uint(remainder);
+				chunk.chunkLen = uint(remainder)
 			} else {
 				chunk.chunkLen = uint(blen)
 			}
 			offset += int64(chunk.chunkLen)
-			sums = append(sums, )
+			sums = append(sums)
 		}
 		result := new(SumStruct)
 		result.fileLen = uint64(offset)
@@ -201,16 +199,16 @@ func (s *Sender) Generator(fileList FileList) error {
 }
 
 func (s *Sender) FileUploader() error {
-	panic("Not implemented yet");
+	panic("Not implemented yet")
 	return nil
 }
 
 func (s *Sender) FinalPhase() error {
-	panic("Not implemented yet");
+	panic("Not implemented yet")
 	return nil
 }
 
 func (s *Sender) Sync() error {
-	panic("Not implemented yet");
+	panic("Not implemented yet")
 	return nil
 }
