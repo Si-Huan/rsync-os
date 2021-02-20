@@ -69,7 +69,7 @@ func NewTeambition(bucket string, prefix string, cachePath string, cookie string
 	value, err := proto.Marshal(&cache.TbFInfo{
 		Size:  0,
 		Mtime: 0,
-		Mode:  0,
+		Mode:  16877,
 		ObjId: []byte(bucketNode.NodeId),
 	})
 	if err != nil {
