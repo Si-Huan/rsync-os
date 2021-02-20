@@ -1,11 +1,18 @@
 syntax = "proto3";
 package proto;
 
-option go_package = "github.com/kaiakz/rsync-os/fldb";
+option go_package = "github.com/kaiakz/rsync-os/cache";
 
 message FInfo {
     int64 Size = 1;
     int32 Mtime = 2;
     int32 Mode = 3;
     // hash 16bytes
+}
+
+message TbFInfo {
+    int64 Size = 1;
+    int32 Mtime = 2;
+    int32 Mode = 3;
+    bytes ObjId = 4;
 }

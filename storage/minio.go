@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/minio/minio-go/v6"
@@ -236,4 +237,13 @@ func (m *Minio) Close() error {
 		return err
 	}
 	return nil
+}
+
+func (m *Minio) GetURI(fileName string)(string,error){
+	fpath := filepath.Join(m.prefix, fileName)
+	url,err := m.client.PresignedGetObject(m.bucketName,fpath,time.Hour * 12,nil)
+	if err != nil {
+		return "", err
+	}
+	return url.String() ,nil
 }

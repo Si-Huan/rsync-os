@@ -12,6 +12,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"path/filepath"
 	"rsync-os/rsync"
 	"rsync-os/storage"
 	"time"
@@ -53,6 +54,46 @@ func ClientS3(src string, dest string) {
 
 }
 
+func ClientTb(src string, dest string) {
+	addr, module, path, err := rsync.SplitURI(src)
+
+	if err != nil {
+		log.Println("Invaild URI")
+		return
+	}
+
+	log.Println(module, path)
+
+	ppath := rsync.TrimPrepath(path)
+
+	if viper.GetStringMapString(dest) == nil {
+		log.Println("Lack of ", dest)
+		return
+	}
+
+	// Config
+	dbconf := viper.GetStringMapString(dest + ".boltdb")
+	tbConf := viper.GetStringMapString(dest)
+
+	log.Println(module, ppath)
+
+	bucket := filepath.Join(tbConf["base"], module)
+
+	stor, err := storage.NewTeambition(bucket, ppath, dbconf["path"], tbConf["cookie"])
+	if err != nil {
+		panic(err)
+	}
+	defer stor.Close()
+
+	client, err := rsync.SocketClient(stor, addr, module, ppath, nil)
+	if err != nil {
+		panic("rsync client fails to initialize")
+	}
+	if err := client.Sync(); err != nil {
+		panic(err)
+	}
+}
+
 func main() {
 	loadConfigIfExists()
 	flag.Parse()
@@ -62,6 +103,7 @@ func main() {
 		return
 	}
 	startTime := time.Now()
-	ClientS3(args[0], args[1])
+	//ClientS3(args[0], args[1])
+	ClientTb(args[0], args[1])
 	log.Println("Duration:", time.Since(startTime))
 }

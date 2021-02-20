@@ -34,12 +34,11 @@ func createSampleConfig() {
 		`title = "configuration of rsync-os"
 
 # [object storage's name] 
-[minio]
-  endpoint = "127.0.0.1:9000"
-  keyAccess = "minioadmin"
-  keySecret = "minioadmin"
-  [minio.boltdb]
-    path = "test.db"
+[teambition]
+  cookie = "TEAMBITION_SESSIONID=xxx; TEAMBITION_SESSIONID.sig=xxx"
+  base = "mirrors/"
+  [teambition.boltdb]
+    path = "teambition.db"
 `)
 
 	if ioutil.WriteFile("config.toml", confSample, 0666) != nil {
