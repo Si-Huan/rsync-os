@@ -9,8 +9,8 @@ import (
 	"log"
 	"path"
 	"path/filepath"
-	"rsync-os/rsync"
-	"rsync-os/storage/cache"
+	"github.com/Si-Huan/rsync-os/rsync"
+	"github.com/Si-Huan/rsync-os/storage/cache"
 	"sort"
 	"strings"
 

@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
-	"rsync-os/rsync"
-	"rsync-os/storage"
+	"github.com/Si-Huan/rsync-os/rsync"
+	"github.com/Si-Huan/rsync-os/storage"
 	"time"
 
 	"github.com/spf13/viper"
