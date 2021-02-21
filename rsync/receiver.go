@@ -10,7 +10,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/kaiakz/ubuffer"
+	"github.com/Si-Huan/ubuffer"
 )
 
 /* Receiver:
@@ -264,7 +264,7 @@ func (r *Receiver) FileDownloader(localList FileList) error {
 		log.Println("Downloading:", string(path), count, blen, clen, remainder, localList[index].Size)
 
 		// If the file is too big to store in memory, creates a temporary file in the directory 'tmp'
-		buffer := ubuffer.NewBuffer(localList[index].Size)
+		buffer := ubuffer.NewBuffer(localList[index].Size,"./syncTemp")
 		downloadeSize := 0
 		bufwriter := bufio.NewWriter(buffer)
 

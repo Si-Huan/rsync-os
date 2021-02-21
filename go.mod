@@ -4,8 +4,8 @@ go 1.15
 
 require (
 	github.com/Si-Huan/teambition-pan-api v0.0.0-20210219043959-2991e6452421
+	github.com/Si-Huan/ubuffer v0.0.0-20210221075203-c73a1bf8bf75
 	github.com/golang/protobuf v1.4.3
-	github.com/kaiakz/ubuffer v0.0.0-20200803053910-dd1083087166
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.7.1
