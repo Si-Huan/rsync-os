@@ -119,13 +119,13 @@ func (tb *Teambition) Put(fileName string, content io.Reader, fileSize int64, me
 		if err != nil && err != NotFound {
 			return -1, err
 		}
-		if selfNode == nil {
+
+		if metadata.Mode.IsREG() {
 			parentNode, err = tb.node(parentPath)
 			if err != nil {
 				return -1, errors.New("no parent")
 			}
-		}
-		if metadata.Mode.IsREG() {
+
 			if selfNode != nil {
 				err = tb.client.Delete(tb.ctx, selfNode)
 				if err != nil {
@@ -142,6 +142,11 @@ func (tb *Teambition) Put(fileName string, content io.Reader, fileSize int64, me
 			if selfNode != nil {
 				objid = []byte(selfNode.NodeId)
 			} else {
+				parentNode, err = tb.node(parentPath)
+				if err != nil {
+					return -1, errors.New("no parent")
+				}
+
 				newNode, err := tb.client.CreateFolderIn(tb.ctx, parentNode, name)
 				if err != nil {
 					return -1, err
