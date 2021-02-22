@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"github.com/Si-Huan/rsync-os/rsync"
+	"github.com/Si-Huan/rsync-os/storage/cache"
 	"io"
 	"io/ioutil"
 	"log"
 	"path"
 	"path/filepath"
-	"github.com/Si-Huan/rsync-os/rsync"
-	"github.com/Si-Huan/rsync-os/storage/cache"
 	"sort"
 	"strings"
+	"sync"
 
 	tba "github.com/Si-Huan/teambition-pan-api"
 	"github.com/golang/protobuf/proto"
@@ -32,6 +33,8 @@ type Teambition struct {
 	cache  *bolt.DB
 	tx     *bolt.Tx
 	bucket *bolt.Bucket
+
+	mutex *sync.Mutex
 }
 
 func NewTeambition(bucket string, prefix string, cachePath string, cookie string) (*Teambition, error) {
@@ -80,6 +83,7 @@ func NewTeambition(bucket string, prefix string, cachePath string, cookie string
 		return nil, err
 	}
 
+	mutex := new(sync.Mutex)
 	return &Teambition{
 		client:     teambitionClient,
 		bucketName: bucket,
@@ -88,11 +92,15 @@ func NewTeambition(bucket string, prefix string, cachePath string, cookie string
 		cache:      db,
 		tx:         tx,
 		bucket:     mod,
+		mutex:      mutex,
 	}, nil
 }
 
 // object can be a regualar file, folder or symlink
 func (tb *Teambition) Put(fileName string, content io.Reader, fileSize int64, metadata rsync.FileMetadata) (written int64, err error) {
+	tb.mutex.Lock()
+	defer tb.mutex.Unlock()
+
 	var (
 		parentPath, name string
 		objid            []byte
@@ -172,6 +180,9 @@ func (tb *Teambition) Put(fileName string, content io.Reader, fileSize int64, me
 }
 
 func (tb *Teambition) Delete(fileName string, mode rsync.FileMode) (err error) {
+	tb.mutex.Lock()
+	defer tb.mutex.Unlock()
+
 	fpath := filepath.Join(tb.prefix, fileName)
 
 	if !mode.IsLNK() {
@@ -263,6 +274,9 @@ func (tb *Teambition) FinishSync() (err error) {
 }
 
 func (tb *Teambition) Close() error {
+	tb.mutex.Lock()
+	defer tb.mutex.Unlock()
+
 	defer func() {
 		if err := tb.cache.Close(); err != nil {
 			log.Println(err)
@@ -301,12 +315,12 @@ func (tb *Teambition) node(path string) (*tba.Node, error) {
 
 //not allow dir path
 func (tb *Teambition) GetURI(fileName string) (uri string, err error) {
-	fpath := filepath.Join(tb.prefix,fileName)
-	node,err := tb.node(fpath)
+	fpath := filepath.Join(tb.prefix, fileName)
+	node, err := tb.node(fpath)
 	if err != nil {
 		return "", err
 	}
-	node,err = tb.client.GetbyNodeId(tb.ctx,node.NodeId)
+	node, err = tb.client.GetbyNodeId(tb.ctx, node.NodeId)
 	if err != nil {
 		return "", err
 	}
@@ -314,5 +328,5 @@ func (tb *Teambition) GetURI(fileName string) (uri string, err error) {
 		return "", NotFile
 	}
 
-	return node.DownloadUrl,nil
+	return node.DownloadUrl, nil
 }
