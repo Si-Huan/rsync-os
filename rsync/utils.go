@@ -1,7 +1,6 @@
 package rsync
 
 import (
-	"log"
 	"strconv"
 	"strings"
 
@@ -77,7 +76,7 @@ func SplitURI(uri string) (string, string, string, error) {
 	} else {
 		// Only for remote
 		/* host::module[/path] */
-		log.Fatalln("No implement yet")
+		Logger.Fatalln("No implement yet")
 	}
 
 	address = first

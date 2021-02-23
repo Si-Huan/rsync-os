@@ -3,7 +3,6 @@ package rsync
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"net"
 	"strings"
 )
@@ -46,7 +45,7 @@ func SocketClient(storage FS, address string, module string, path string, option
 		// FIXME: (panic)type not a pointer: int
 		//panic(err)
 	}
-	log.Println(versionStr)
+	Logger.Info(versionStr)
 
 	buf := new(bytes.Buffer)
 
@@ -65,7 +64,7 @@ func SocketClient(storage FS, address string, module string, path string, option
 		if err != nil {
 			return nil, err
 		}
-		log.Print(res)
+		Logger.Info(res)
 		if strings.Contains(res, RSYNCD_OK) {
 			break
 		}
@@ -86,10 +85,10 @@ func SocketClient(storage FS, address string, module string, path string, option
 	if err != nil {
 		return nil, err
 	}
-	log.Println("SEED", seed)
+	Logger.Info("SEED: ",seed)
 
 	// HandShake OK
-	log.Println("Handshake completed")
+	Logger.Info("Handshake completed")
 
 	// Begin to demux
 	conn.reader = NewMuxReader(conn.reader)

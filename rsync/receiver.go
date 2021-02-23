@@ -5,9 +5,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"sort"
 	"time"
@@ -161,7 +161,9 @@ func (r *Receiver) RecvFileList() (FileList, map[string][]byte, error) {
 			//fmt.Println("Symbolic Len:", len, "Content:", slink)
 		}
 
-		fmt.Println("@", string(path), mode, size, mtime)
+		if Logger.Level == logrus.DebugLevel {
+			fmt.Fprintln(Logger.Out,"@", string(path), mode, size, mtime)
+		}
 
 		filelist = append(filelist, FileInfo{
 			Path:  path,
@@ -185,7 +187,7 @@ func (r *Receiver) Generator(remoteList FileList, downloadList []int, symlinks m
 	for _, v := range downloadList {
 		if remoteList[v].Mode.IsREG() {
 			if err := r.conn.WriteInt(int32(v)); err != nil {
-				log.Println("Failed to send index")
+				Logger.Error("Failed to send index")
 				return err
 			}
 			//fmt.Println("Request: ", string(remoteList[v].Path), uint32(remoteList[v].Mode))
@@ -216,14 +218,14 @@ func (r *Receiver) Generator(remoteList FileList, downloadList []int, symlinks m
 
 	// Send -1 to finish, then start to download
 	if err := r.conn.WriteInt(INDEX_END); err != nil {
-		log.Println("Can't send INDEX_END")
+		Logger.Error("Can't send INDEX_END")
 		return err
 	}
-	log.Println("Request completed")
+	Logger.Info("Request completed")
 
 	startTime := time.Now()
 	err := r.FileDownloader(remoteList[:])
-	log.Println("Downloaded duration:", time.Since(startTime))
+	Logger.Info("Downloaded duration: ", time.Since(startTime))
 	return err
 }
 
@@ -269,7 +271,13 @@ func (r *Receiver) FileDownloader(localList FileList) error {
 		}
 
 		path := localList[index].Path
-		log.Println("Downloading:", string(path), count, blen, clen, remainder, localList[index].Size)
+		Logger.WithFields(logrus.Fields{
+			"count":     count,
+			"blen":      blen,
+			"clen":      clen,
+			"remainder": remainder,
+			"size":      localList[index].Size,
+		}).Info("Downloading: ", string(path))
 
 		// If the file is too big to store in memory, creates a temporary file in the directory 'tmp'
 		buffer := ubuffer.NewBuffer(localList[index].Size, tempDir)
@@ -287,7 +295,7 @@ func (r *Receiver) FileDownloader(localList FileList) error {
 			if err != nil {
 				return err
 			}
-			log.Println("TOKEN", token)
+			Logger.Debug("TOKEN: ", token)
 			if token == 0 {
 				break
 			} else if token < 0 {
@@ -300,7 +308,7 @@ func (r *Receiver) FileDownloader(localList FileList) error {
 					return err
 				}
 				downloadeSize += int(token)
-				log.Println("Downloaded:", downloadeSize, "byte")
+				Logger.Debug("Downloaded: ", downloadeSize, " byte")
 				if _, err := bufwriter.Write(ctx); err != nil {
 					return err
 				}
@@ -339,8 +347,10 @@ func (r *Receiver) FileDownloader(localList FileList) error {
 		if buffer.Finalize() != nil {
 			return errors.New("Buffer can't be finalized")
 		}
-
-		log.Printf("Successfully uploaded %s of size %d\n", path, n)
+		Logger.WithFields(logrus.Fields{
+			"path": string(path),
+			"size": n,
+		}).Info("Successfully uploaded")
 	}
 }
 
@@ -351,7 +361,7 @@ func (r *Receiver) FileCleaner(localList FileList, deleteList []int) error {
 	for i := len(deleteList) - 1; i >= 0; i-- {
 		fname := string(localList[i].Path)
 		err := r.storage.Delete(fname, localList[i].Mode)
-		log.Println("Deleted:", fname)
+		Logger.Info("Deleted: ", fname)
 		if err != nil {
 			return err
 		}
@@ -374,7 +384,9 @@ func (r *Receiver) FinalPhase() error {
 
 func (r *Receiver) Sync() error {
 	defer func() {
-		log.Println("Task completed", r.conn.Close()) // TODO: How to handle errors from Close
+		Logger.WithFields(logrus.Fields{
+			"conn close err": r.conn.Close(), // TODO: How to handle errors from Close
+		}).Warn("Task completed")
 	}()
 
 	lfiles, err := r.storage.List()
@@ -389,19 +401,24 @@ func (r *Receiver) Sync() error {
 	if err != nil {
 		return err
 	}
-	log.Println("Remote files count:", len(rfiles))
+	Logger.Info("Remote files count: ", len(rfiles))
 
 	ioerr, err := r.conn.ReadInt()
 	if err != nil {
 		return nil
 	}
-	log.Println("IOERR", ioerr)
+	Logger.Info("IOERR: ", ioerr)
 
 	newfiles, oldfiles := lfiles.Diff(rfiles)
 	if len(newfiles) == 0 && len(oldfiles) == 0 {
-		log.Println("There is nothing to do")
+		Logger.Warn("There is nothing to do")
 	}
-	fmt.Print(newfiles, oldfiles)
+	if Logger.Level == logrus.DebugLevel {
+		fmt.Fprintln(Logger.Out,"New Files:",newfiles)
+		fmt.Fprintln(Logger.Out,"Old Files:",oldfiles)
+	}
+	Logger.Info("newfiles count: ",len(newfiles))
+	Logger.Info("oldfiles count: ",len(oldfiles))
 
 	if err := r.Generator(rfiles[:], newfiles[:], symlinks); err != nil {
 		return err
