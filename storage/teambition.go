@@ -191,6 +191,16 @@ func (tb *Teambition) Delete(fileName string, mode rsync.FileMode) (err error) {
 	fpath := filepath.Join(tb.prefix, fileName)
 
 	if !mode.IsLNK() {
+		if mode.IsDIR(){
+			if fpath == "."{
+				return errors.New("can't delete root dir")
+			}
+			prefix := []byte(fpath + "/")
+			k, _ := tb.bucket.Cursor().Seek(prefix)
+			if k != nil {
+				return errors.New("cannot delete a non-empty dir")
+			}
+		}
 		deleteNode, err := tb.node(fpath)
 		if err != nil {
 			return err
@@ -198,7 +208,6 @@ func (tb *Teambition) Delete(fileName string, mode rsync.FileMode) (err error) {
 		if err = tb.client.Delete(tb.ctx, deleteNode); err != nil {
 			return err
 		}
-
 	}
 
 	return tb.bucket.Delete([]byte(fpath))
