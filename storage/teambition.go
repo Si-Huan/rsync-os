@@ -8,7 +8,6 @@ import (
 	"github.com/Si-Huan/rsync-os/storage/cache"
 	"io"
 	"io/ioutil"
-	"log"
 	"path"
 	"path/filepath"
 	"sort"
@@ -47,12 +46,6 @@ func NewTeambition(bucket string, prefix string, cachePath string, cookie string
 		panic("Failed to init a teambition client")
 	}
 
-	// Create workplace
-	bucketNode, err := teambitionClient.CreateFolder(ctx, filepath.Join(bucket, prefix))
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	// Initialize cache
 	db, err := bolt.Open(cachePath, 0666, nil)
 	if err != nil {
@@ -69,21 +62,30 @@ func NewTeambition(bucket string, prefix string, cachePath string, cookie string
 		return nil, err
 	}
 
-	value, err := proto.Marshal(&cache.TbFInfo{
-		Size:  0,
-		Mtime: 0,
-		Mode:  16877,
-		ObjId: []byte(bucketNode.NodeId),
-	})
-	if err != nil {
-		return nil, err
-	}
+	if v := mod.Get([]byte(filepath.Clean(prefix))); v == nil {
+		// Create workplace
+		bucketNode, err := teambitionClient.CreateFolder(ctx, filepath.Join(bucket, prefix))
+		if err != nil {
+			return nil, err
+		}
 
-	if err := mod.Put([]byte(filepath.Clean(prefix)), value); err != nil {
-		return nil, err
+		value, err := proto.Marshal(&cache.TbFInfo{
+			Size:  0,
+			Mtime: 0,
+			Mode:  16877,
+			ObjId: []byte(bucketNode.NodeId),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		if err := mod.Put([]byte(filepath.Clean(prefix)), value); err != nil {
+			return nil, err
+		}
 	}
 
 	mutex := new(sync.Mutex)
+
 	return &Teambition{
 		client:     teambitionClient,
 		bucketName: bucket,
@@ -122,6 +124,7 @@ func (tb *Teambition) Put(fileName string, content io.Reader, fileSize int64, me
 			return -1, err
 		}
 		objid = []byte(path.Join(parentPath, string(relativePath)))
+		written = 0
 	} else {
 		selfNode, err := tb.node(fpath)
 		if err != nil && err != NotFound {
@@ -146,6 +149,7 @@ func (tb *Teambition) Put(fileName string, content io.Reader, fileSize int64, me
 				return -1, err
 			}
 			objid = []byte(newNode.NodeId)
+			written = newNode.Size
 		} else if metadata.Mode.IsDIR() {
 			if selfNode != nil {
 				objid = []byte(selfNode.NodeId)
@@ -161,6 +165,7 @@ func (tb *Teambition) Put(fileName string, content io.Reader, fileSize int64, me
 				}
 				objid = []byte(newNode.NodeId)
 			}
+			written = 0
 		}
 	}
 
@@ -176,7 +181,7 @@ func (tb *Teambition) Put(fileName string, content io.Reader, fileSize int64, me
 	if err := tb.bucket.Put([]byte(fpath), value); err != nil {
 		return -1, err
 	}
-	return 0, nil
+	return written, nil
 }
 
 func (tb *Teambition) Delete(fileName string, mode rsync.FileMode) (err error) {
@@ -275,11 +280,10 @@ func (tb *Teambition) FinishSync() (err error) {
 
 func (tb *Teambition) Close() error {
 	tb.mutex.Lock()
-	defer tb.mutex.Unlock()
 
 	defer func() {
 		if err := tb.cache.Close(); err != nil {
-			log.Println(err)
+			panic(err)
 		}
 	}()
 	if err := tb.tx.Commit(); err != nil {
