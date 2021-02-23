@@ -3,7 +3,6 @@ package rsync
 import (
 	"encoding/binary"
 	"errors"
-	"github.com/sirupsen/logrus"
 	"io"
 )
 
@@ -61,10 +60,10 @@ func (r *MuxReader) readHeader() error {
 		tag := r.header[3]                                        // Little Endian
 		size := (binary.LittleEndian.Uint32(r.header) & 0xffffff) // TODO: zero?
 
-		Logger.WithFields(logrus.Fields{
-			"tag": tag,
-			"size":   size,
-		}).Debug("<DEMUX>")
+		//Logger.WithFields(logrus.Fields{
+		//	"tag": tag,
+		//	"size":   size,
+		//}).Debug("<DEMUX>")
 
 		if tag == (MUX_BASE + MSG_DATA) { // MUX_BASE + MSG_DATA
 			r.remain = size

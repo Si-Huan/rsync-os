@@ -11,6 +11,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"log"
 	"path/filepath"
 	"github.com/Si-Huan/rsync-os/rsync"
@@ -44,7 +45,7 @@ func ClientS3(src string, dest string) {
 	stor, _ := storage.NewMinio(module, ppath, dbconf["path"], minioConf["endpoint"], minioConf["keyaccess"], minioConf["keysecret"], false)
 	defer stor.Close()
 
-	client, err := rsync.SocketClient(stor, addr, module, ppath, nil)
+	client, err := rsync.SocketClient(stor, addr, module, ppath, nil, logrus.New())
 	if err != nil {
 		panic("rsync client fails to initialize")
 	}
@@ -85,7 +86,7 @@ func ClientTb(src string, dest string) {
 	}
 	defer stor.Close()
 
-	client, err := rsync.SocketClient(stor, addr, module, ppath, nil)
+	client, err := rsync.SocketClient(stor, addr, module, ppath, nil,logrus.New())
 	if err != nil {
 		panic("rsync client fails to initialize")
 	}

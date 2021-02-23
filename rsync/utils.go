@@ -76,7 +76,7 @@ func SplitURI(uri string) (string, string, string, error) {
 	} else {
 		// Only for remote
 		/* host::module[/path] */
-		Logger.Fatalln("No implement yet")
+		return "", "", "", errors.New("No implement yet")
 	}
 
 	address = first

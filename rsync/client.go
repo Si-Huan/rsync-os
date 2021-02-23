@@ -3,6 +3,7 @@ package rsync
 import (
 	"bytes"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net"
 	"strings"
 )
@@ -16,7 +17,7 @@ import (
 
 // TODO: passes more arguments: cmd
 // Connect to rsync daemon
-func SocketClient(storage FS, address string, module string, path string, options map[string]string) (SendReceiver, error) {
+func SocketClient(storage FS, address string, module string, path string, options map[string]string, logger *logrus.Logger) (SendReceiver, error) {
 	skt, err := net.Dial("tcp", address)
 	if err != nil {
 		return nil, err
@@ -45,7 +46,7 @@ func SocketClient(storage FS, address string, module string, path string, option
 		// FIXME: (panic)type not a pointer: int
 		//panic(err)
 	}
-	Logger.Info(versionStr)
+	logger.Info(versionStr)
 
 	buf := new(bytes.Buffer)
 
@@ -64,7 +65,7 @@ func SocketClient(storage FS, address string, module string, path string, option
 		if err != nil {
 			return nil, err
 		}
-		Logger.Info(res)
+		logger.Info(res)
 		if strings.Contains(res, RSYNCD_OK) {
 			break
 		}
@@ -85,10 +86,10 @@ func SocketClient(storage FS, address string, module string, path string, option
 	if err != nil {
 		return nil, err
 	}
-	Logger.Info("SEED: ",seed)
+	logger.Info("SEED: ",seed)
 
 	// HandShake OK
-	Logger.Info("Handshake completed")
+	logger.Info("Handshake completed")
 
 	// Begin to demux
 	conn.reader = NewMuxReader(conn.reader)
@@ -107,6 +108,7 @@ func SocketClient(storage FS, address string, module string, path string, option
 		path:    path,
 		seed:    seed,
 		storage: storage,
+		logger: logger,
 	}, nil
 }
 
