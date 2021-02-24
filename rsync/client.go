@@ -18,6 +18,17 @@ import (
 // TODO: passes more arguments: cmd
 // Connect to rsync daemon
 func SocketClient(storage FS, address string, module string, path string, options map[string]string, logger *logrus.Logger) (SendReceiver, error) {
+	excludePatterns := make([]string, 0)
+	for option, value := range options {
+		switch option {
+		case "--exclude":
+			excludePatterns = append(excludePatterns, value)
+			break
+		default:
+			break
+		}
+	}
+
 	skt, err := net.Dial("tcp", address)
 	if err != nil {
 		return nil, err
@@ -86,7 +97,7 @@ func SocketClient(storage FS, address string, module string, path string, option
 	if err != nil {
 		return nil, err
 	}
-	logger.Info("SEED: ",seed)
+	logger.Info("SEED: ", seed)
 
 	// HandShake OK
 	logger.Info("Handshake completed")
@@ -95,10 +106,21 @@ func SocketClient(storage FS, address string, module string, path string, option
 	conn.reader = NewMuxReader(conn.reader)
 
 	// As a client, we need to send filter list
+	for _, pattern := range excludePatterns {  //TODO use buf
+		err = conn.WriteInt(int32(len(pattern)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = conn.Write([]byte(pattern))
+		if err != nil {
+			return nil, err
+		}
+	}
 	err = conn.WriteInt(EXCLUSION_END)
 	if err != nil {
 		return nil, err
 	}
+	logger.Info("Send exclusion completed")
 
 	// TODO: Sender
 
@@ -108,7 +130,7 @@ func SocketClient(storage FS, address string, module string, path string, option
 		path:    path,
 		seed:    seed,
 		storage: storage,
-		logger: logger,
+		logger:  logger,
 	}, nil
 }
 
