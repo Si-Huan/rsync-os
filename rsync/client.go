@@ -17,18 +17,7 @@ import (
 
 // TODO: passes more arguments: cmd
 // Connect to rsync daemon
-func SocketClient(storage FS, address string, module string, path string, options map[string]string, logger *logrus.Logger) (SendReceiver, error) {
-	excludePatterns := make([]string, 0)
-	for option, value := range options {
-		switch option {
-		case "--exclude":
-			excludePatterns = append(excludePatterns, value)
-			break
-		default:
-			break
-		}
-	}
-
+func SocketClient(storage FS, address string, module string, path string, options map[string][]string, logger *logrus.Logger) (SendReceiver, error) {
 	skt, err := net.Dial("tcp", address)
 	if err != nil {
 		return nil, err
@@ -106,7 +95,7 @@ func SocketClient(storage FS, address string, module string, path string, option
 	conn.reader = NewMuxReader(conn.reader)
 
 	// As a client, we need to send filter list
-	for _, pattern := range excludePatterns {  //TODO use buf
+	for _, pattern := range options["--exclude"] {  //TODO use buf
 		err = conn.WriteInt(int32(len(pattern)))
 		if err != nil {
 			return nil, err

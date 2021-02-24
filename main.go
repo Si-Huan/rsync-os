@@ -86,7 +86,7 @@ func ClientTb(src string, dest string) {
 	}
 	defer stor.Close()
 
-	client, err := rsync.SocketClient(stor, addr, module, ppath, nil,logrus.New())
+	client, err := rsync.SocketClient(stor, addr, module, ppath, map[string][]string{"--exclude":{"adir/","*.txt"}},logrus.New())
 	if err != nil {
 		panic("rsync client fails to initialize")
 	}
