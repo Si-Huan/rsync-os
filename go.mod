@@ -3,7 +3,7 @@ module github.com/Si-Huan/rsync-os
 go 1.15
 
 require (
-	github.com/Si-Huan/teambition-pan-api v0.0.0-20210222130027-abd7d4d937b5
+	github.com/Si-Huan/teambition-pan-api v0.0.0-20210302043849-b2fcb0ce6d4b
 	github.com/Si-Huan/ubuffer v0.0.0-20210221075203-c73a1bf8bf75
 	github.com/golang/protobuf v1.4.3
 	github.com/minio/minio-go/v6 v6.0.57
