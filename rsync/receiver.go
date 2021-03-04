@@ -12,7 +12,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/Si-Huan/ubuffer"
+	"github.com/sihuan/ubuffer"
 )
 
 /* Receiver:

@@ -2,7 +2,7 @@ package cache
 
 import (
 	"log"
-	"github.com/Si-Huan/rsync-os/rsync"
+	"github.com/sihuan/rsync-os/rsync"
 	"time"
 
 	"github.com/golang/protobuf/proto"

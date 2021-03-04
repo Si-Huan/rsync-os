@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/Si-Huan/rsync-os/rsync"
-	"github.com/Si-Huan/rsync-os/storage/cache"
+	"github.com/sihuan/rsync-os/rsync"
+	"github.com/sihuan/rsync-os/storage/cache"
 	"io"
 	"io/ioutil"
 	"path"
@@ -14,7 +14,7 @@ import (
 	"strings"
 	"sync"
 
-	tba "github.com/Si-Huan/teambition-pan-api"
+	tba "github.com/sihuan/teambition-pan-api"
 	"github.com/golang/protobuf/proto"
 	bolt "go.etcd.io/bbolt"
 )
@@ -191,13 +191,13 @@ func (tb *Teambition) Delete(fileName string, mode rsync.FileMode) (err error) {
 	fpath := filepath.Join(tb.prefix, fileName)
 
 	if !mode.IsLNK() {
-		if mode.IsDIR(){
-			if fpath == "."{
+		if mode.IsDIR() {
+			if fpath == "." {
 				return errors.New("can't delete root dir")
 			}
 			prefix := []byte(fpath + "/")
 			k, _ := tb.bucket.Cursor().Seek(prefix)
-			if k != nil {
+			if k != nil && bytes.HasPrefix(k, prefix) {
 				return errors.New("cannot delete a non-empty dir")
 			}
 		}

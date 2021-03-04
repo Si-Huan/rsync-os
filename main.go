@@ -14,8 +14,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"log"
 	"path/filepath"
-	"github.com/Si-Huan/rsync-os/rsync"
-	"github.com/Si-Huan/rsync-os/storage"
+	"github.com/sihuan/rsync-os/rsync"
+	"github.com/sihuan/rsync-os/storage"
 	"time"
 
 	"github.com/spf13/viper"
